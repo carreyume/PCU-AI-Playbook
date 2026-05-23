@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCU AI PLAYBOOK — Internal Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── PCU BRAND TOKENS ── */
+:root {
+  --pcu-navy:      #0a2347;
+  --pcu-navy2:     #0d2e5e;
+  --pcu-navy3:     #163a72;
+  --pcu-gold:      #c9a84c;
+  --pcu-gold2:     #e2c272;
+  --pcu-gold-bg:   rgba(201,168,76,.1);
+  --pcu-gold-bdr:  rgba(201,168,76,.28);
+  --white:         #ffffff;
+  --offwhite:      #f6f7f9;
+  --offwhite2:     #edf0f4;
+  --offwhite3:     #e2e6ed;
+  --ink:           #0a1628;
+  --ink2:          #2c3e55;
+  --ink3:          #637289;
+  --border:        rgba(10,35,71,.1);
+  --border2:       rgba(10,35,71,.05);
+
+  /* tool colours */
+  --claude:        #c17f3a;
+  --claude-bg:     rgba(193,127,58,.09);
+  --claude-bdr:    rgba(193,127,58,.25);
+  --gpt:           #19a37a;
+  --gpt-bg:        rgba(25,163,122,.08);
+  --gpt-bdr:       rgba(25,163,122,.22);
+  --ms:            #0067b8;
+  --ms-bg:         rgba(0,103,184,.08);
+  --ms-bdr:        rgba(0,103,184,.22);
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--offwhite);
+  color:var(--ink);
+  font-family:'DM Sans',sans-serif;
+  font-weight:300;
+  overflow-x:hidden;
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  background:var(--pcu-navy);
+  border-bottom:2px solid var(--pcu-gold);
+  padding:0 2.5rem;
+  height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-l{display:flex;align-items:center;gap:1.25rem;}
+.nav-wordmark{
+  font-family:'Libre Baskerville',serif;
+  font-size:.95rem;font-weight:700;
+  color:var(--white);
+  letter-spacing:.04em;
+}
+.nav-pipe{width:1px;height:16px;background:rgba(255,255,255,.15);}
+.nav-doc{
+  font-family:'DM Mono',monospace;
+  font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--pcu-gold);
+}
+.nav-links{display:flex;gap:1.75rem;list-style:none;}
+.nav-links a{
+  font-family:'DM Mono',monospace;
+  font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.45);
+  text-decoration:none;transition:color .2s;
+}
+.nav-links a:hover{color:var(--pcu-gold);}
+.nav-badge{
+  font-family:'DM Mono',monospace;
+  font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:.28rem .85rem;
+  background:var(--pcu-gold);
+  color:var(--pcu-navy);
+  font-weight:500;
+  border-radius:1px;
+}
+
+/* ── COVER ── */
+.cover{
+  min-height:100vh;
+  background:var(--pcu-navy);
+  display:grid;grid-template-rows:1fr auto;
+  padding:5rem 2.5rem 3rem;
+  position:relative;overflow:hidden;
+}
+.cover-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:56px 56px;
+}
+.cover-stripe{
+  position:absolute;
+  left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(to bottom,var(--pcu-gold),rgba(201,168,76,.2));
+}
+.cover-glow{
+  position:absolute;
+  width:700px;height:500px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(201,168,76,.07) 0%,transparent 65%);
+  top:-150px;right:-100px;pointer-events:none;
+}
+.cover-body{position:relative;z-index:1;max-width:820px;}
+.cover-pre{
+  font-family:'DM Mono',monospace;
+  font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--pcu-gold);
+  margin-bottom:2rem;
+  display:flex;align-items:center;gap:.85rem;
+}
+.cover-pre-line{width:28px;height:1px;background:var(--pcu-gold);opacity:.5;}
+.cover h1{
+  font-family:'Libre Baskerville',serif;
+  font-size:clamp(3rem,8vw,7.5rem);
+  font-weight:700;line-height:.92;
+  letter-spacing:-.02em;
+  color:var(--white);
+  text-transform:uppercase;
+  margin-bottom:1.75rem;
+}
+.cover h1 em{
+  display:block;
+  font-style:italic;
+  font-weight:400;
+  text-transform:none;
+  color:var(--pcu-gold);
+  font-size:.55em;
+  letter-spacing:.01em;
+  margin-top:.35rem;
+}
+.cover-desc{
+  font-size:.95rem;
+  color:rgba(255,255,255,.45);
+  max-width:480px;line-height:1.7;
+  margin-bottom:2.5rem;
+}
+.cover-tools{display:flex;gap:.85rem;flex-wrap:wrap;margin-bottom:0;}
+.cover-tool{
+  display:flex;align-items:center;gap:.55rem;
+  padding:.45rem .95rem;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:1px;
+  background:rgba(255,255,255,.03);
+}
+.ctd{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ctd-c{background:var(--claude);}
+.ctd-g{background:var(--gpt);}
+.ctd-m{background:var(--ms);}
+.cover-tool-n{
+  font-family:'DM Mono',monospace;
+  font-size:.6rem;letter-spacing:.07em;
+  color:rgba(255,255,255,.45);
+}
+.cover-bottom{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid rgba(255,255,255,.07);
+  padding-top:2rem;gap:1.5rem;margin-top:3rem;
+}
+.cb-num{
+  font-family:'Libre Baskerville',serif;
+  font-size:2.6rem;font-weight:700;
+  color:var(--pcu-gold);line-height:1;margin-bottom:.2rem;
+}
+.cb-lbl{
+  font-family:'DM Mono',monospace;
+  font-size:.53rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+/* ── SECTIONS ── */
+section{padding:5rem 2.5rem;position:relative;}
+.sec-lbl{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem;}
+.sec-idx{
+  font-family:'DM Mono',monospace;
+  font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--pcu-gold);
+  background:var(--pcu-gold-bg);
+  border:1px solid var(--pcu-gold-bdr);
+  padding:.14rem .5rem;border-radius:1px;
+}
+.sec-name{
+  font-family:'DM Mono',monospace;
+  font-size:.54rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink3);
+}
+h2.sh{
+  font-family:'Libre Baskerville',serif;
+  font-size:clamp(1.9rem,3.8vw,3rem);
+  font-weight:700;line-height:1.08;
+  letter-spacing:-.015em;margin-bottom:.6rem;
+  color:var(--ink);
+}
+.sl{font-size:.88rem;color:var(--ink3);max-width:520px;line-height:1.68;margin-bottom:2.75rem;}
+hr.rule{border:none;border-top:1px solid var(--border);margin:0 2.5rem;}
+
+/* dark sections */
+.dark-sec{background:var(--pcu-navy);}
+.dark-sec h2.sh{color:var(--white);}
+.dark-sec .sl{color:rgba(255,255,255,.45);}
+.dark-sec .sec-name{color:rgba(255,255,255,.3);}
+
+/* alt bg */
+.alt-sec{background:var(--offwhite2);}
+
+/* ── TOOL COMPARE ── */
+.cmp-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);overflow:hidden;
+}
+.cmp-col{background:var(--white);}
+.cmp-head{
+  padding:1.35rem 1.6rem;
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;gap:.7rem;
+  background:var(--pcu-navy);
+}
+.cmp-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.cmp-nm{
+  font-family:'Libre Baskerville',serif;
+  font-size:1rem;font-weight:700;color:var(--white);
+}
+.cmp-tp{
+  font-family:'DM Mono',monospace;
+  font-size:.55rem;letter-spacing:.09em;text-transform:uppercase;
+  color:rgba(255,255,255,.35);margin-left:auto;
+}
+.cmp-rows{padding:.35rem 0;}
+.cmp-row{
+  padding:.75rem 1.6rem;
+  border-bottom:1px solid var(--border2);
+  display:flex;flex-direction:column;gap:.18rem;
+}
+.cmp-row:last-child{border-bottom:none;}
+.cmp-rlbl{
+  font-family:'DM Mono',monospace;
+  font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink3);
+}
+.cmp-rval{font-size:.8rem;color:var(--ink2);line-height:1.45;}
+.cbadge{
+  display:inline-block;
+  font-family:'DM Mono',monospace;
+  font-size:.52rem;letter-spacing:.06em;text-transform:uppercase;
+  padding:.16rem .48rem;border-radius:1px;margin-top:.18rem;
+}
+.bc{background:var(--claude-bg);color:var(--claude);border:1px solid var(--claude-bdr);}
+.bg{background:var(--gpt-bg);color:var(--gpt);border:1px solid var(--gpt-bdr);}
+.bm{background:var(--ms-bg);color:var(--ms);border:1px solid var(--ms-bdr);}
+
+/* ms band */
+.ms-band{
+  background:var(--pcu-navy2);
+  padding:.85rem 2.5rem;
+  display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;
+  border-top:1px solid rgba(201,168,76,.2);
+  border-bottom:1px solid rgba(201,168,76,.2);
+}
+.ms-band-lbl{
+  font-family:'DM Mono',monospace;
+  font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--pcu-gold);flex-shrink:0;
+}
+.ms-chips{display:flex;gap:.55rem;flex-wrap:wrap;}
+.ms-chip{
+  font-family:'DM Mono',monospace;
+  font-size:.58rem;letter-spacing:.07em;
+  padding:.28rem .7rem;
+  background:rgba(0,103,184,.18);
+  color:#7ab8f5;
+  border:1px solid rgba(0,103,184,.3);
+  border-radius:1px;
+}
+
+/* ── WHEN TO USE ── */
+.wtu-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+.wtu-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  padding:1.85rem;position:relative;
+}
+.wtu-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+}
+.wtu-card.wc::before{background:var(--claude);}
+.wtu-card.wg::before{background:var(--gpt);}
+.wtu-tag{
+  font-family:'DM Mono',monospace;
+  font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:.22rem .6rem;border-radius:1px;
+  display:inline-block;margin-bottom:.9rem;
+}
+.wtc{background:var(--claude-bg);color:var(--claude);border:1px solid var(--claude-bdr);}
+.wtg{background:var(--gpt-bg);color:var(--gpt);border:1px solid var(--gpt-bdr);}
+.wtu-title{
+  font-family:'Libre Baskerville',serif;
+  font-size:1.2rem;font-weight:700;margin-bottom:.7rem;line-height:1.2;
+}
+.wtu-list{list-style:none;display:flex;flex-direction:column;gap:.45rem;}
+.wtu-list li{
+  font-size:.8rem;color:var(--ink2);
+  padding-left:1.15rem;position:relative;line-height:1.5;
+}
+.wtu-list li::before{
+  content:'→';position:absolute;left:0;
+  color:var(--pcu-gold);font-size:.7rem;line-height:1.45;
+}
+
+/* ── USE CASES TABLE ── */
+.uc-table{
+  width:100%;border-collapse:collapse;
+  border:1px solid var(--border);
+}
+.uc-table thead th{
+  background:var(--pcu-navy);color:var(--white);
+  font-family:'DM Mono',monospace;
+  font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:.8rem 1.1rem;text-align:left;font-weight:400;
+  border-right:1px solid rgba(255,255,255,.07);
+}
+.uc-table thead th:last-child{border-right:none;}
+.uc-table tbody tr{border-bottom:1px solid var(--border2);}
+.uc-table tbody tr:last-child{border-bottom:none;}
+.uc-table tbody tr:nth-child(even) td{background:var(--offwhite);}
+.uc-table tbody tr:hover td{background:var(--pcu-gold-bg);}
+.uc-table td{
+  padding:.85rem 1.1rem;font-size:.78rem;
+  color:var(--ink2);vertical-align:top;
+  border-right:1px solid var(--border2);line-height:1.5;
+}
+.uc-table td:last-child{border-right:none;}
+.uc-table td.fn{font-weight:600;color:var(--ink);white-space:nowrap;font-size:.8rem;}
+.tpip{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem;}
+.tp{
+  font-family:'DM Mono',monospace;
+  font-size:.5rem;letter-spacing:.06em;
+  padding:.13rem .42rem;border-radius:1px;
+}
+.tp.c{background:var(--claude-bg);color:var(--claude);border:1px solid var(--claude-bdr);}
+.tp.g{background:var(--gpt-bg);color:var(--gpt);border:1px solid var(--gpt-bdr);}
+.tp.m{background:var(--ms-bg);color:var(--ms);border:1px solid var(--ms-bdr);}
+.spd{
+  font-family:'DM Mono',monospace;
+  font-size:.56rem;letter-spacing:.06em;
+  padding:.18rem .48rem;border-radius:1px;white-space:nowrap;
+}
+.spd-now{background:rgba(25,163,122,.1);color:var(--gpt);border:1px solid var(--gpt-bdr);}
+.spd-s{background:var(--pcu-gold-bg);color:var(--pcu-gold);border:1px solid var(--pcu-gold-bdr);}
+
+/* ── PIPELINE FLOW ── */
+.flow-sec{background:var(--white);}
+.flow-track{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:0;position:relative;
+}
+.flow-track::before{
+  content:'';position:absolute;
+  top:32px;left:10%;right:10%;height:1px;
+  background:linear-gradient(to right,transparent,var(--pcu-gold-bdr) 20%,var(--pcu-gold-bdr) 80%,transparent);
+}
+.flow-step{text-align:center;padding:0 1rem;}
+.flow-node{
+  width:64px;height:64px;border-radius:50%;
+  margin:0 auto 1rem;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--pcu-gold-bdr);
+  background:var(--pcu-gold-bg);
+  position:relative;z-index:1;
+  transition:all .25s;
+}
+.flow-node:hover{background:var(--pcu-navy);border-color:var(--pcu-navy);}
+.flow-node:hover .fn-n{color:var(--white);}
+.fn-n{
+  font-family:'Libre Baskerville',serif;
+  font-size:1.3rem;font-weight:700;
+  color:var(--pcu-navy);transition:color .25s;
+}
+.flow-title{font-size:.85rem;font-weight:600;margin-bottom:.35rem;color:var(--ink);}
+.flow-desc{font-size:.73rem;color:var(--ink3);line-height:1.5;}
+.flow-tool{
+  display:inline-block;
+  font-family:'DM Mono',monospace;
+  font-size:.53rem;letter-spacing:.07em;text-transform:uppercase;
+  padding:.18rem .5rem;margin-top:.55rem;
+  background:var(--pcu-gold-bg);
+  color:var(--pcu-gold);
+  border:1px solid var(--pcu-gold-bdr);
+  border-radius:1px;
+}
+
+/* ── HURDLES ── */
+.hurdle-list{
+  display:flex;flex-direction:column;gap:0;
+  border:1px solid var(--border);
+}
+.hurdle-row{
+  display:grid;grid-template-columns:3fr 1fr 2fr;
+  gap:0;border-bottom:1px solid var(--border2);
+}
+.hurdle-row:last-child{border-bottom:none;}
+.hurdle-row:nth-child(even) .hc{background:var(--offwhite);}
+.hc{
+  padding:.9rem 1.2rem;
+  border-right:1px solid var(--border2);
+  font-size:.78rem;color:var(--ink2);line-height:1.45;
+}
+.hc:last-child{border-right:none;}
+.hc.hd{
+  background:var(--pcu-navy)!important;
+  font-family:'DM Mono',monospace;
+  font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.6);font-weight:400;
+}
+.hc-h{font-weight:600;color:var(--ink);}
+.ftag{
+  font-family:'DM Mono',monospace;
+  font-size:.52rem;letter-spacing:.07em;text-transform:uppercase;
+  padding:.16rem .44rem;border-radius:1px;display:inline-block;
+}
+.fc{background:var(--claude-bg);color:var(--claude);border:1px solid var(--claude-bdr);}
+.fg{background:var(--gpt-bg);color:var(--gpt);border:1px solid var(--gpt-bdr);}
+.fm{background:var(--ms-bg);color:var(--ms);border:1px solid var(--ms-bdr);}
+.fx{background:var(--pcu-gold-bg);color:var(--pcu-gold);border:1px solid var(--pcu-gold-bdr);}
+
+/* ── GOVERNANCE ── */
+.gov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;}
+.gov-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-top:3px solid var(--pcu-navy);
+  padding:1.6rem;
+}
+.gov-icon{font-size:1.3rem;margin-bottom:.65rem;}
+.gov-title{
+  font-family:'Libre Baskerville',serif;
+  font-size:1rem;font-weight:700;margin-bottom:.45rem;line-height:1.2;
+  color:var(--pcu-navy);
+}
+.gov-body{font-size:.78rem;color:var(--ink2);line-height:1.6;}
+.gov-note{
+  margin-top:.7rem;
+  font-family:'DM Mono',monospace;
+  font-size:.57rem;letter-spacing:.07em;
+  color:var(--pcu-gold);
+  padding-top:.7rem;
+  border-top:1px solid var(--border2);
+}
+
+/* ── 90-DAY PLAN ── */
+.days-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border:1px solid var(--border);
+  background:var(--border);gap:1px;
+}
+.day-col{background:var(--white);padding:2rem 1.75rem;position:relative;}
+.day-num{
+  font-family:'Libre Baskerville',serif;
+  font-size:5.5rem;font-weight:700;
+  color:rgba(10,35,71,.04);
+  position:absolute;top:.5rem;right:1.25rem;line-height:1;
+}
+.day-badge{
+  font-family:'DM Mono',monospace;
+  font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;
+  padding:.22rem .58rem;border-radius:1px;
+  display:inline-block;margin-bottom:.85rem;
+}
+.db1{background:var(--gpt-bg);color:var(--gpt);border:1px solid var(--gpt-bdr);}
+.db2{background:var(--claude-bg);color:var(--claude);border:1px solid var(--claude-bdr);}
+.db3{background:var(--ms-bg);color:var(--ms);border:1px solid var(--ms-bdr);}
+.day-title{
+  font-family:'Libre Baskerville',serif;
+  font-size:1.2rem;font-weight:700;margin-bottom:.2rem;
+  color:var(--pcu-navy);
+}
+.day-focus{
+  font-family:'DM Mono',monospace;
+  font-size:.57rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink3);margin-bottom:1.2rem;
+}
+.day-items{list-style:none;display:flex;flex-direction:column;gap:.5rem;}
+.day-items li{
+  font-size:.78rem;color:var(--ink2);
+  padding-left:1rem;position:relative;line-height:1.45;
+}
+.day-items li::before{
+  content:'—';position:absolute;left:0;
+  color:var(--pcu-gold);font-size:.7rem;line-height:1.4;
+}
+
+/* ── POLICY SECTION ── */
+.policy-sec{background:var(--pcu-navy);}
+.policy-sec h2.sh{color:var(--white);}
+.policy-sec .sl{color:rgba(255,255,255,.45);}
+.policy-sec .sec-name{color:rgba(255,255,255,.3);}
+.policy-sec .sec-idx{color:var(--pcu-gold);background:rgba(201,168,76,.12);border-color:rgba(201,168,76,.3);}
+
+.policy-cols{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1.5rem;margin-bottom:2rem;
+}
+.policy-col{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:1.75rem;}
+.policy-col-title{
+  font-family:'Libre Baskerville',serif;
+  font-size:1rem;font-weight:700;
+  color:var(--pcu-gold);margin-bottom:1rem;
+  padding-bottom:.65rem;
+  border-bottom:1px solid rgba(201,168,76,.2);
+}
+.policy-list{list-style:none;display:flex;flex-direction:column;gap:.45rem;}
+.policy-list li{
+  font-size:.78rem;color:rgba(255,255,255,.55);
+  padding-left:1.1rem;position:relative;line-height:1.5;
+}
+.policy-list li::before{
+  content:'·';position:absolute;left:0;
+  color:var(--pcu-gold);font-size:1.1rem;line-height:1.2;
+}
+.policy-list li strong{color:rgba(255,255,255,.8);font-weight:500;}
+
+.policy-principles{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.07);
+  margin-bottom:2rem;
+}
+.pp-cell{
+  background:rgba(255,255,255,.03);
+  padding:1.25rem 1.1rem;
+  text-align:center;
+}
+.pp-icon{font-size:1.2rem;margin-bottom:.5rem;}
+.pp-title{
+  font-family:'Libre Baskerville',serif;
+  font-size:.85rem;font-weight:700;
+  color:var(--white);margin-bottom:.3rem;
+}
+.pp-desc{font-size:.72rem;color:rgba(255,255,255,.38);line-height:1.45;}
+
+.policy-note{
+  padding:1.1rem 1.5rem;
+  background:rgba(201,168,76,.07);
+  border:1px solid rgba(201,168,76,.18);
+  border-left:3px solid var(--pcu-gold);
+  font-size:.8rem;color:rgba(255,255,255,.5);
+  line-height:1.6;
+}
+.policy-note strong{color:var(--pcu-gold);}
+
+/* ── INSIGHTS SECTION ── */
+.insights-sec{background:var(--offwhite2);}
+
+.insights-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.25rem;margin-bottom:2.5rem;
+}
+.insight-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  padding:1.6rem;
+  position:relative;overflow:hidden;
+}
+.insight-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--pcu-navy);
+}
+.ic-date{
+  font-family:'DM Mono',monospace;
+  font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink3);margin-bottom:.6rem;
+}
+.ic-topic{
+  font-family:'Libre Baskerville',serif;
+  font-size:.95rem;font-weight:700;
+  color:var(--pcu-navy);margin-bottom:.5rem;line-height:1.2;
+}
+.ic-body{font-size:.77rem;color:var(--ink2);line-height:1.6;margin-bottom:.85rem;}
+.ic-tags{display:flex;gap:.4rem;flex-wrap:wrap;}
+.ic-tag{
+  font-family:'DM Mono',monospace;
+  font-size:.52rem;letter-spacing:.07em;text-transform:uppercase;
+  padding:.16rem .44rem;border-radius:1px;
+}
+.ict-risk{background:rgba(156,38,38,.08);color:#9c2626;border:1px solid rgba(156,38,38,.15);}
+.ict-build{background:var(--claude-bg);color:var(--claude);border:1px solid var(--claude-bdr);}
+.ict-gov{background:var(--pcu-gold-bg);color:var(--pcu-gold);border:1px solid var(--pcu-gold-bdr);}
+.ict-collab{background:var(--gpt-bg);color:var(--gpt);border:1px solid var(--gpt-bdr);}
+.ict-hub{background:var(--ms-bg);color:var(--ms);border:1px solid var(--ms-bdr);}
+
+.action-table{
+  width:100%;border-collapse:collapse;
+  border:1px solid var(--border);
+}
+.action-table thead th{
+  background:var(--pcu-navy);color:var(--white);
+  font-family:'DM Mono',monospace;
+  font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:.75rem 1.1rem;text-align:left;font-weight:400;
+  border-right:1px solid rgba(255,255,255,.07);
+}
+.action-table thead th:last-child{border-right:none;}
+.action-table tbody tr{border-bottom:1px solid var(--border2);}
+.action-table tbody tr:last-child{border-bottom:none;}
+.action-table tbody tr:nth-child(even) td{background:var(--offwhite);}
+.action-table td{
+  padding:.8rem 1.1rem;font-size:.77rem;
+  color:var(--ink2);vertical-align:top;
+  border-right:1px solid var(--border2);line-height:1.45;
+}
+.action-table td:last-child{border-right:none;}
+.action-table td.owner{
+  font-family:'DM Mono',monospace;
+  font-size:.65rem;color:var(--pcu-navy);font-weight:500;
+}
+.action-table td.status{font-size:.72rem;}
+.stat-open{color:var(--gpt);}
+.stat-prog{color:var(--claude);}
+.stat-done{color:var(--ink3);}
+
+/* ── FOOTER ── */
+footer{background:var(--pcu-navy);border-top:3px solid var(--pcu-gold);}
+.footer-inner{
+  padding:2rem 2.5rem;
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;gap:2rem;
+}
+.footer-doc-title{
+  font-family:'DM Sans',sans-serif;
+  font-size:.85rem;font-weight:500;
+  color:rgba(255,255,255,.6);
+}
+.footer-doc-meta{
+  font-family:'DM Mono',monospace;
+  font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.22);margin-top:.3rem;
+}
+.footer-author{
+  text-align:right;
+  padding-left:2rem;
+  border-left:1px solid rgba(255,255,255,.1);
+}
+.footer-by{
+  font-family:'DM Mono',monospace;
+  font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(201,168,76,.6);margin-bottom:.28rem;
+}
+.footer-name{
+  font-family:'Libre Baskerville',serif;
+  font-size:.95rem;font-weight:700;
+  color:var(--pcu-gold);letter-spacing:.02em;
+}
+.footer-role{
+  font-family:'DM Mono',monospace;
+  font-size:.5rem;letter-spacing:.07em;
+  color:rgba(255,255,255,.3);
+  margin-top:.25rem;line-height:1.6;
+}
+
+/* ── COST BASELINE ── */
+.cost-sec{background:var(--pcu-navy);}
+.cost-sec h2.sh{color:var(--white);}
+.cost-sec .sl{color:rgba(255,255,255,.45);}
+.cost-sec .sec-name{color:rgba(255,255,255,.3);}
+
+.cost-hero{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1px;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.07);
+  margin-bottom:2.5rem;
+}
+.cost-hero-cell{
+  padding:2rem 2.25rem;
+  background:rgba(255,255,255,.03);
+}
+.cost-hero-cell.highlight{
+  background:rgba(201,168,76,.08);
+  border:1px solid rgba(201,168,76,.18);
+}
+.ch-pre{
+  font-family:'DM Mono',monospace;
+  font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.3);margin-bottom:.5rem;
+}
+.ch-num{
+  font-family:'Libre Baskerville',serif;
+  font-size:3rem;font-weight:700;
+  color:var(--pcu-gold);line-height:1;margin-bottom:.35rem;
+}
+.ch-label{
+  font-family:'DM Sans',sans-serif;
+  font-size:.82rem;color:rgba(255,255,255,.55);line-height:1.5;
+}
+.ch-note{
+  font-family:'DM Mono',monospace;
+  font-size:.55rem;letter-spacing:.08em;
+  color:rgba(201,168,76,.5);
+  margin-top:.5rem;
+}
+
+.cost-bands{display:flex;flex-direction:column;gap:1px;}
+.cost-band{
+  display:grid;grid-template-columns:180px 1fr auto;
+  align-items:center;gap:0;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+}
+.cost-band.head{
+  background:rgba(255,255,255,.06);
+  border-color:rgba(255,255,255,.08);
+}
+.cb-cell{
+  padding:.8rem 1.25rem;
+  border-right:1px solid rgba(255,255,255,.06);
+  font-size:.78rem;color:rgba(255,255,255,.55);
+  line-height:1.4;
+}
+.cb-cell:last-child{border-right:none;}
+.cb-cell.hd{
+  font-family:'DM Mono',monospace;
+  font-size:.53rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(201,168,76,.6);font-weight:400;
+}
+.cb-cell.role-name{
+  font-weight:600;color:var(--white);font-size:.8rem;
+}
+.cb-bar-wrap{position:relative;height:6px;background:rgba(255,255,255,.07);border-radius:3px;flex:1;margin:0 1.25rem;}
+.cb-bar{height:6px;border-radius:3px;background:var(--pcu-gold);}
+.cb-val{
+  font-family:'DM Mono',monospace;
+  font-size:.62rem;letter-spacing:.06em;
+  color:var(--pcu-gold);white-space:nowrap;
+  padding:.8rem 1.25rem;
+}
+.cb-roi{
+  display:inline-block;
+  font-family:'DM Mono',monospace;
+  font-size:.52rem;letter-spacing:.07em;text-transform:uppercase;
+  padding:.15rem .48rem;border-radius:1px;margin-left:.5rem;
+  background:rgba(25,163,122,.15);color:#5dd4a8;
+  border:1px solid rgba(25,163,122,.25);
+  vertical-align:middle;
+}
+
+.cost-note-row{
+  display:flex;gap:1.5rem;margin-top:1.5rem;flex-wrap:wrap;
+}
+.cost-note{
+  flex:1;min-width:200px;
+  padding:1.1rem 1.25rem;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-left:3px solid var(--pcu-gold);
+}
+.cn-label{
+  font-family:'DM Mono',monospace;
+  font-size:.53rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(201,168,76,.7);margin-bottom:.3rem;
+}
+.cn-val{font-size:.8rem;color:rgba(255,255,255,.5);line-height:1.5;}
+
+/* ── COLLABORATION ── */
+.collab-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.25rem;margin-bottom:2.5rem;
+}
+.collab-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-top:3px solid var(--pcu-navy);
+  padding:1.75rem;
+}
+.collab-card.gold-top{border-top-color:var(--pcu-gold);}
+.collab-card.green-top{border-top-color:var(--gpt);}
+
+.cc-icon{font-size:1.4rem;margin-bottom:.65rem;}
+.cc-title{
+  font-family:'Libre Baskerville',serif;
+  font-size:1rem;font-weight:700;
+  color:var(--pcu-navy);margin-bottom:.45rem;line-height:1.2;
+}
+.cc-body{font-size:.78rem;color:var(--ink2);line-height:1.6;margin-bottom:.85rem;}
+.cc-saves{
+  display:flex;flex-direction:column;gap:.3rem;
+  padding-top:.75rem;border-top:1px solid var(--border2);
+}
+.cc-save{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.74rem;color:var(--ink3);
+}
+.cc-save-val{
+  font-family:'DM Mono',monospace;
+  font-size:.62rem;letter-spacing:.06em;
+  color:var(--pcu-navy);font-weight:500;
+}
+
+.collab-scenario{
+  border:1px solid var(--border);
+  margin-bottom:1px;
+}
+.cs-head{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
+  background:var(--pcu-navy);
+}
+.cs-hcell{
+  padding:.75rem 1.1rem;
+  font-family:'DM Mono',monospace;
+  font-size:.53rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+  border-right:1px solid rgba(255,255,255,.07);
+}
+.cs-hcell:last-child{border-right:none;}
+.cs-row{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
+  border-top:1px solid var(--border2);
+}
+.cs-row:nth-child(even){background:var(--offwhite);}
+.cs-row:hover{background:var(--pcu-gold-bg);}
+.cs-cell{
+  padding:.8rem 1.1rem;
+  font-size:.78rem;color:var(--ink2);
+  border-right:1px solid var(--border2);
+  line-height:1.4;vertical-align:top;
+}
+.cs-cell:last-child{border-right:none;}
+.cs-cell.scenario-name{font-weight:600;color:var(--ink);}
+.cs-cell.before{color:var(--ink3);}
+.cs-cell.after{color:var(--gpt);font-weight:500;}
+.cs-cell.saving{
+  font-family:'DM Mono',monospace;
+  font-size:.7rem;letter-spacing:.05em;
+  color:var(--pcu-gold);font-weight:500;
+}
+.tag-small{
+  display:inline-block;
+  font-family:'DM Mono',monospace;
+  font-size:.5rem;letter-spacing:.06em;text-transform:uppercase;
+  padding:.12rem .4rem;border-radius:1px;margin-left:.3rem;vertical-align:middle;
+}
+.ts-c{background:var(--claude-bg);color:var(--claude);border:1px solid var(--claude-bdr);}
+.ts-g{background:var(--gpt-bg);color:var(--gpt);border:1px solid var(--gpt-bdr);}
+
+/* ── REVEAL ── */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease;}
+.rv.on{opacity:1;transform:none;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  nav{padding:0 1.5rem;}
+  .nav-links{display:none;}
+  .cover,.section{padding:4.5rem 1.5rem 2.5rem;}
+  section{padding:3.5rem 1.5rem;}
+  hr.rule{margin:0 1.5rem;}
+  .cover-bottom{grid-template-columns:1fr 1fr;}
+  .cmp-grid{grid-template-columns:1fr;}
+  .wtu-grid{grid-template-columns:1fr;}
+  .flow-track{grid-template-columns:1fr 1fr;}
+  .flow-track::before{display:none;}
+  .gov-grid{grid-template-columns:1fr;}
+  .days-grid{grid-template-columns:1fr;}
+  .hurdle-row{grid-template-columns:1fr;}
+  .hc{border-right:none;border-bottom:1px solid var(--border2);}
+  .policy-cols{grid-template-columns:1fr;}
+  .policy-principles{grid-template-columns:1fr 1fr;}
+  .insights-grid{grid-template-columns:1fr;}
+  .footer-inner{grid-template-columns:1fr;gap:1.25rem;}
+  .footer-author{text-align:left;padding-left:0;border-left:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-l">
+    <span class="nav-wordmark">PCU AI PLAYBOOK</span>
+    <div class="nav-pipe"></div>
+    <span class="nav-doc">Internal Guide</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#tools">Tools</a></li>
+    <li><a href="#when">When to Use</a></li>
+    <li><a href="#usecases">Use Cases</a></li>
+    <li><a href="#policy">Policy</a></li>
+    <li><a href="#cost">Cost & ROI</a></li>
+    <li><a href="#collab">Collaboration</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#insights">From the Team</a></li>
+    <li><a href="#hurdles">Hurdles</a></li>
+    <li><a href="#plan">90 Days</a></li>
+  </ul>
+  <div class="nav-badge">Internal · v1.0</div>
+</nav>
+
+<!-- COVER -->
+<!-- NAV -->
+<nav>
+  <div class="nav-l">
+    <span class="nav-wordmark">PCU AI PLAYBOOK</span>
+    <div class="nav-pipe"></div>
+    <span class="nav-doc">Internal Guide</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#problem">The Problem</a></li>
+    <li><a href="#policy">Policy</a></li>
+    <li><a href="#tools">The Tools</a></li>
+    <li><a href="#usecases">Use Cases</a></li>
+    <li><a href="#cost">Cost & ROI</a></li>
+    <li><a href="#collab">Collaboration</a></li>
+    <li><a href="#process">Pipeline</a></li>
+    <li><a href="#insights">From the Team</a></li>
+    <li><a href="#plan">90 Days</a></li>
+  </ul>
+  <div class="nav-badge">Internal · v1.0</div>
+</nav>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-stripe"></div>
+  <div class="cover-glow"></div>
+  <div class="cover-body">
+    <div class="cover-pre"><span class="cover-pre-line"></span>PCU Group · Internal AI Playbook</div>
+    <h1>PCU AI<br>Playbook<em>From problem to action — clearly.</em></h1>
+    <p class="cover-desc">The group has the tools, the policy, and the mandate. This document maps the problems we are solving, the tools available to solve them, and exactly how to get started.</p>
+    <div class="cover-tools">
+      <div class="cover-tool"><div class="ctd ctd-c"></div><span class="cover-tool-n">Claude Enterprise</span></div>
+      <div class="cover-tool"><div class="ctd ctd-g"></div><span class="cover-tool-n">ChatGPT Enterprise</span></div>
+      <div class="cover-tool"><div class="ctd ctd-m"></div><span class="cover-tool-n">Microsoft 365 + Azure</span></div>
+    </div>
+  </div>
+  <div class="cover-bottom">
+    <div><div class="cb-num">2</div><div class="cb-lbl">Enterprise AI Accounts</div></div>
+    <div><div class="cb-num">3+</div><div class="cb-lbl">Active Prototypes in Group</div></div>
+    <div><div class="cb-num">500K</div><div class="cb-lbl">Claude Context Window</div></div>
+    <div><div class="cb-num">Day 1</div><div class="cb-lbl">Time to First Value</div></div>
+  </div>
+</div>
+
+<!-- 01 THE PROBLEM -->
+<section id="problem">
+  <div class="sec-lbl rv"><span class="sec-idx">01</span><span class="sec-name">The Problem</span></div>
+  <h2 class="sh rv">Why This Playbook Exists.</h2>
+  <p class="sl rv">PCU operates across multiple countries, entities, and functions. The problems below are not hypothetical — they are happening now, observed directly within the group.</p>
+
+  <div class="cmp-grid rv" style="grid-template-columns:repeat(2,1fr);">
+    <div class="cmp-col">
+      <div class="cmp-head" style="background:var(--ink2);">
+        <span class="cmp-nm">Work Is Slower Than It Should Be</span>
+      </div>
+      <div class="cmp-rows">
+        <div class="cmp-row">
+          <span class="cmp-rlbl">ESG Reports</span>
+          <span class="cmp-rval">First drafts take 3–5 days involving 1–2 consultants. The same output can be produced in a single session with the right tool and context loaded.</span>
+        </div>
+        <div class="cmp-row">
+          <span class="cmp-rlbl">Client Proposals</span>
+          <span class="cmp-rval">Proposal cycles run 2–3 days of writing and revision. Teams repeat research that already exists internally across entities.</span>
+        </div>
+        <div class="cmp-row">
+          <span class="cmp-rlbl">Audit Reporting</span>
+          <span class="cmp-rval">Auditors spend up to 2 weeks writing a report after completing fieldwork — time that does not generate revenue. The audit tool prototype targets 1–2 hours.</span>
+        </div>
+        <div class="cmp-row">
+          <span class="cmp-rlbl">Monthly Reporting</span>
+          <span class="cmp-rval">Consolidating group performance reports from multiple entities takes 3–5 days of coordinator time. Much of it is formatting and chasing files.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-col">
+      <div class="cmp-head" style="background:var(--ink2);">
+        <span class="cmp-nm">Knowledge Is Siloed and Duplicated</span>
+      </div>
+      <div class="cmp-rows">
+        <div class="cmp-row">
+          <span class="cmp-rlbl">Duplicate Projects</span>
+          <span class="cmp-rval">Multiple entities have independently built near-identical AI tools — email-reading agents, logo approval tools, OCR digitisation — using separate third parties, with no awareness of each other.</span>
+        </div>
+        <div class="cmp-row">
+          <span class="cmp-rlbl">No Central Register</span>
+          <span class="cmp-rval">The AI project register exists but is hard to find. Incomplete. Not driving the coordination it was designed for.</span>
+        </div>
+        <div class="cmp-row">
+          <span class="cmp-rlbl">Staff Turnover</span>
+          <span class="cmp-rval">When people leave, their institutional knowledge leaves with them. New staff spend weeks asking colleagues questions that could be self-served.</span>
+        </div>
+        <div class="cmp-row">
+          <span class="cmp-rlbl">Cross-Entity Friction</span>
+          <span class="cmp-rval">Briefing another entity, commissioning work, or tracking man-hours across offices is manual, slow, and error-prone — a coordination tax the group pays every month.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:1.5rem;" class="rv">
+    <div class="cmp-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="cmp-col">
+        <div class="cmp-head" style="background:var(--ink2);">
+          <span class="cmp-nm">AI Adoption Is Uneven</span>
+        </div>
+        <div class="cmp-rows">
+          <div class="cmp-row">
+            <span class="cmp-rlbl">Tool Confusion</span>
+            <span class="cmp-rval">Claude Enterprise and ChatGPT Enterprise are both active. Many staff do not know which to use, when, or for what. Some are paying for personal subscriptions unnecessarily.</span>
+          </div>
+          <div class="cmp-row">
+            <span class="cmp-rlbl">No Shared Prompts</span>
+            <span class="cmp-rval">No group prompt library. Every user starts from a blank page. Proven prompts that save hours are not shared.</span>
+          </div>
+          <div class="cmp-row">
+            <span class="cmp-rlbl">No Visibility</span>
+            <span class="cmp-rval">Leadership has no view of which teams are using AI, how much, or what it is producing. Adoption is invisible.</span>
+          </div>
+        </div>
+      </div>
+      <div class="cmp-col">
+        <div class="cmp-head" style="background:var(--ink2);">
+          <span class="cmp-nm">Governance Has Gaps</span>
+        </div>
+        <div class="cmp-rows">
+          <div class="cmp-row">
+            <span class="cmp-rlbl">Unsanctioned Tools</span>
+            <span class="cmp-rval">Staff are using free and personal AI accounts — Gemini, personal Claude Pro — with no data controls. Client data is at risk.</span>
+          </div>
+          <div class="cmp-row">
+            <span class="cmp-rlbl">Agent Liability</span>
+            <span class="cmp-rval">When an AI agent performs an action under a user's identity — and the outcome is wrong — the logs show the user's name. HR and management are not yet prepared for this.</span>
+          </div>
+          <div class="cmp-row">
+            <span class="cmp-rlbl">No Accountability Rule</span>
+            <span class="cmp-rval">The Code of Conduct does not yet explicitly state that AI output reviewed and submitted by a person is that person's responsibility. This is being addressed.</span>
+          </div>
+        </div>
+      </div>
+      <div class="cmp-col">
+        <div class="cmp-head" style="background:var(--ink2);">
+          <span class="cmp-nm">Speed Is the Real Risk</span>
+        </div>
+        <div class="cmp-rows">
+          <div class="cmp-row">
+            <span class="cmp-rlbl">Competitors Are Moving</span>
+            <span class="cmp-rval">Sustainability consultancies that operationalise AI in the next 6 months will set client expectations for the next 5 years. Late adoption is not a neutral position.</span>
+          </div>
+          <div class="cmp-row">
+            <span class="cmp-rlbl">Seats Already Paid For</span>
+            <span class="cmp-rval">The Enterprise accounts are active. Every month of underutilisation is a direct cost with no return. The infrastructure is there — the activation is not.</span>
+          </div>
+          <div class="cmp-row">
+            <span class="cmp-rlbl">Talent Gap Opening</span>
+            <span class="cmp-rval">AI-fluent staff are becoming a competitive differentiator. Building that capability now — while the market hasn't priced it in — is the window available.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 02 POLICY -->
+<section id="policy" class="policy-sec">
+  <div class="sec-lbl rv">
+    <span class="sec-idx" style="background:rgba(201,168,76,.12);color:var(--pcu-gold);border-color:rgba(201,168,76,.3);">02</span>
+    <span class="sec-name" style="color:rgba(255,255,255,.3);">rPCU Responsible AI Usage Policy · v0.1</span>
+  </div>
+  <h2 class="sh rv">The Rules.<br>Before the Tools.</h2>
+  <p class="sl rv">The rPCU Responsible AI Usage Policy governs all AI use across the group — employee or contractor, any function, any entity. Reviewed every 6 months by the ICT Innovation Steering Committee.</p>
+
+  <div class="policy-principles rv">
+    <div class="pp-cell"><div class="pp-icon">⚖️</div><div class="pp-title">Fairness</div><div class="pp-desc">AI must not discriminate on race, gender, age, or any protected characteristic.</div></div>
+    <div class="pp-cell"><div class="pp-icon">🔍</div><div class="pp-title">Transparency</div><div class="pp-desc">AI decisions must be explainable. Users must understand what AI is doing.</div></div>
+    <div class="pp-cell"><div class="pp-icon">🧑‍⚖️</div><div class="pp-title">Accountability</div><div class="pp-desc">The organisation and the individual remain responsible for AI outputs. AI does not absorb liability.</div></div>
+    <div class="pp-cell"><div class="pp-icon">🔒</div><div class="pp-title">Data Privacy</div><div class="pp-desc">GDPR and local data laws apply. No client data into unapproved public tools.</div></div>
+    <div class="pp-cell"><div class="pp-icon">🛡️</div><div class="pp-title">Safety</div><div class="pp-desc">AI systems must be robust and monitored. Vulnerabilities must be identified and mitigated.</div></div>
+    <div class="pp-cell"><div class="pp-icon">👤</div><div class="pp-title">Human Oversight</div><div class="pp-desc">AI enhances human decisions — it does not replace them. Always review critical outputs.</div></div>
+    <div class="pp-cell"><div class="pp-icon">🌱</div><div class="pp-title">Sustainability</div><div class="pp-desc">AI use should reduce energy consumption and support PCU's environmental commitments.</div></div>
+    <div class="pp-cell"><div class="pp-icon">📋</div><div class="pp-title">Governance</div><div class="pp-desc">ICT Innovation Steering Committee oversees all AI deployments. New tools need approval.</div></div>
+  </div>
+
+  <div class="policy-cols rv">
+    <div class="policy-col">
+      <div class="policy-col-title">✅ Encouraged</div>
+      <ul class="policy-list">
+        <li>Summarising lengthy documents or reports</li>
+        <li>Drafting internal communications</li>
+        <li>Prototyping automated workflows</li>
+        <li>Speeding up data analysis</li>
+        <li>Summarising meeting actions and minutes</li>
+        <li>Market analysis and idea generation</li>
+        <li>Language translation of documents</li>
+        <li>Adding ideas to the <strong>central AI project register</strong> on ShareNet</li>
+      </ul>
+    </div>
+    <div class="policy-col">
+      <div class="policy-col-title">🚫 Prohibited</div>
+      <ul class="policy-list">
+        <li><strong>No client data</strong> into public or unapproved AI tools</li>
+        <li><strong>No non-public company information</strong> into free tools</li>
+        <li>Do not make critical decisions based solely on AI output without human review</li>
+        <li>Do not assume AI output is always accurate</li>
+        <li>Do not train models on client data without explicit approval</li>
+        <li>New tools must be reviewed by the <strong>Global IT Team</strong> before use</li>
+        <li>Third-party AI vendors must pass the <strong>3rd Party Cyber Risk Policy</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="policy-note rv">
+    <strong>Personal accountability — confirmed by the AI Expert Team:</strong> If you use AI, do not review the output, and something goes wrong — that is on you. The AI does not carry the responsibility. The Code of Conduct is being updated to make this explicit. Use AI. Review the output. Submit it as yours.
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 03 THE TOOLS -->
+<section id="tools">
+  <div class="sec-lbl rv"><span class="sec-idx">03</span><span class="sec-name">The Tools PCU Has</span></div>
+  <h2 class="sh rv">Two AI Accounts.<br>One Microsoft Ecosystem.</h2>
+  <p class="sl rv">Both accounts are active and paid for. The Microsoft stack is the connective tissue both run on. Neither AI tool replaces the other — they have different strengths.</p>
+
+  <div class="cmp-grid rv">
+    <div class="cmp-col">
+      <div class="cmp-head"><div class="cmp-dot" style="background:var(--claude);"></div><span class="cmp-nm">Claude Enterprise</span><span class="cmp-tp">Anthropic</span></div>
+      <div class="cmp-rows">
+        <div class="cmp-row"><span class="cmp-rlbl">Best For</span><span class="cmp-rval">Long-form reasoning, documents, research, coding, agentic tasks</span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Context Window</span><span class="cmp-rval">500,000 tokens — entire reports, codebases, multi-document analysis in one session<br><span class="cbadge bc">Largest Available</span></span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Claude Code</span><span class="cmp-rval">Agentic development agent — included on all seats. Builds, tests, and commits code.<br><span class="cbadge bc">Included</span></span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Cowork</span><span class="cmp-rval">Operates files, browsers, Excel autonomously. Use with plan-confirmation enabled.<br><span class="cbadge bc">Included — use cautiously</span></span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Microsoft Stack</span><span class="cmp-rval">Native connectors: M365, SharePoint, Teams, GitHub. Also available inside Azure Foundry.</span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Billing</span><span class="cmp-rval">Seat fee (~$25/month) + API usage at token rates. Set spend limits in admin panel.</span></div>
+      </div>
+    </div>
+    <div class="cmp-col">
+      <div class="cmp-head"><div class="cmp-dot" style="background:var(--gpt);"></div><span class="cmp-nm">ChatGPT Enterprise</span><span class="cmp-tp">OpenAI</span></div>
+      <div class="cmp-rows">
+        <div class="cmp-row"><span class="cmp-rlbl">Best For</span><span class="cmp-rval">Conversational tasks, image generation, broad general knowledge, GPT-4o multimodal</span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Context Window</span><span class="cmp-rval">128,000 tokens — strong for most tasks<br><span class="cbadge bg">Standard Enterprise</span></span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Image Generation</span><span class="cmp-rval">DALL·E 3 built-in — visual assets, presentation graphics, concept visuals<br><span class="cbadge bg">Included</span></span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Custom GPTs</span><span class="cmp-rval">Build internal function-specific GPTs. Share across the organisation via GPT Store.</span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Microsoft Stack</span><span class="cmp-rval">Embedded in Teams, Word, Excel, Outlook via M365 Copilot.<br><span class="cbadge bg">Native in M365</span></span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Billing</span><span class="cmp-rval">Per-seat flat rate (~$30/month). Unlimited usage. Simpler cost model.</span></div>
+      </div>
+    </div>
+    <div class="cmp-col">
+      <div class="cmp-head"><div class="cmp-dot" style="background:var(--ms);"></div><span class="cmp-nm">Microsoft 365 + Azure</span><span class="cmp-tp">Foundation</span></div>
+      <div class="cmp-rows">
+        <div class="cmp-row"><span class="cmp-rlbl">Role</span><span class="cmp-rval">The connective tissue. Both Claude and ChatGPT plug into Microsoft. Not a standalone AI — the infrastructure both run on.</span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Data Access</span><span class="cmp-rval">SharePoint, OneDrive, Teams, Outlook — both AI tools read live from these with connector activation<br><span class="cbadge bm">Live Context</span></span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Azure Foundry</span><span class="cmp-rval">Claude models run natively on Azure — same billing, same Entra ID governance<br><span class="cbadge bm">Claude on Azure</span></span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Power BI</span><span class="cmp-rval">AI usage and adoption data feeds into existing Power BI dashboards via Compliance API</span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Governance</span><span class="cmp-rval">Microsoft Entra ID manages identity for both tools. One access control layer for the full stack.</span></div>
+        <div class="cmp-row"><span class="cmp-rlbl">Power Automate</span><span class="cmp-rval">Both APIs plug into existing Power Automate flows. AI becomes a step in workflows already running.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ms-band" style="margin-top:1px;">
+    <span class="ms-band-lbl">M365 Connectors Active on Claude Enterprise</span>
+    <div class="ms-chips">
+      <span class="ms-chip">SharePoint</span><span class="ms-chip">OneDrive</span><span class="ms-chip">Teams</span>
+      <span class="ms-chip">Outlook</span><span class="ms-chip">GitHub</span><span class="ms-chip">Azure Foundry</span>
+      <span class="ms-chip">Power Automate</span><span class="ms-chip">Power BI</span>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 04 WHEN TO USE -->
+<section id="when" class="alt-sec">
+  <div class="sec-lbl rv"><span class="sec-idx">04</span><span class="sec-name">When to Use Which</span></div>
+  <h2 class="sh rv">One Decision.<br>Two Seconds to Make It.</h2>
+  <p class="sl rv">The tools are different. The rule is simple. If you are unsure, default to Claude for anything complex and ChatGPT for anything quick or visual.</p>
+
+  <div class="wtu-grid rv">
+    <div class="wtu-card wc">
+      <div class="wtu-tag wtc">Use Claude When —</div>
+      <div class="wtu-title">The Task Is Long, Deep, or Technical</div>
+      <ul class="wtu-list">
+        <li>Uploading multiple documents for analysis — ESG reports, contracts, proposals</li>
+        <li>Writing or reviewing substantial documents — reports, frameworks, assessments</li>
+        <li>Building or maintaining code, scripts, automation, dashboards</li>
+        <li>Agentic tasks spanning multiple steps requiring judgment across large context</li>
+        <li>Research requiring synthesis across many sources simultaneously</li>
+        <li>Desktop automation via Cowork — Excel, Word, file management (with plan confirmation on)</li>
+        <li>Anything needing the 500K window — full codebases, annual reports, multi-year data</li>
+      </ul>
+    </div>
+    <div class="wtu-card wg">
+      <div class="wtu-tag wtg">Use ChatGPT When —</div>
+      <div class="wtu-title">The Task Is Fast, Visual, or Already in Microsoft</div>
+      <ul class="wtu-list">
+        <li>Quick conversational tasks — brainstorming, Q&amp;A, idea generation</li>
+        <li>Image or graphic creation — presentation visuals, concept sketches, social content</li>
+        <li>Working directly in Teams, Word, Excel, or Outlook via Copilot</li>
+        <li>Using a Custom GPT already built for a specific PCU function</li>
+        <li>Multimodal tasks — combining images, PDFs, and text in a single prompt</li>
+        <li>High-volume casual use where the flat-rate seat cost is a factor</li>
+        <li>Staff who prefer a conversational, chat-first interface for everyday tasks</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 05 USE CASES -->
+<section id="usecases">
+  <div class="sec-lbl rv"><span class="sec-idx">05</span><span class="sec-name">Group Use Cases</span></div>
+  <h2 class="sh rv">What Gets Done<br>With These Tools.</h2>
+  <p class="sl rv">Mapped across all core functions — activatable now, no custom build required for most.</p>
+
+  <div class="rv" style="overflow-x:auto;">
+  <table class="uc-table">
+    <thead>
+      <tr><th>Function</th><th>What Gets Done</th><th>Tool</th><th>Ready</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="fn">ESG &amp; Sustainability</td>
+        <td>Load client data, GRI/TCFD/ISSB standards, and prior reports into Claude. Structured draft report produced in a session — not weeks.<div class="tpip"><span class="tp c">Claude</span><span class="tp m">SharePoint</span></div></td>
+        <td><span class="tp c">Claude</span></td><td><span class="spd spd-now">Now</span></td>
+      </tr>
+      <tr>
+        <td class="fn">Business Development</td>
+        <td>Client proposals from a brief. Methodology library loaded as Project context. Full proposal in under 30 minutes.<div class="tpip"><span class="tp c">Claude</span><span class="tp m">OneDrive</span></div></td>
+        <td><span class="tp c">Claude</span></td><td><span class="spd spd-now">Now</span></td>
+      </tr>
+      <tr>
+        <td class="fn">All Teams — Knowledge</td>
+        <td>Projects populated with entity documents. Anyone queries institutional knowledge, past work, or SOPs without emailing colleagues.<div class="tpip"><span class="tp c">Claude</span><span class="tp g">ChatGPT</span><span class="tp m">SharePoint</span></div></td>
+        <td><span class="tp c">Claude</span></td><td><span class="spd spd-now">Now</span></td>
+      </tr>
+      <tr>
+        <td class="fn">Finance &amp; Operations</td>
+        <td>Cowork reads Excel data, writes commentary, formats board reports in Word. Monthly close cycle shortened significantly.<div class="tpip"><span class="tp c">Claude Cowork</span><span class="tp m">Excel / Word</span></div></td>
+        <td><span class="tp c">Claude</span></td><td><span class="spd spd-now">Now</span></td>
+      </tr>
+      <tr>
+        <td class="fn">Communications</td>
+        <td>Single brief generates multi-market content across all entities. ChatGPT handles visuals; Claude handles copy depth.<div class="tpip"><span class="tp c">Claude</span><span class="tp g">ChatGPT</span></div></td>
+        <td><span class="tp c">Claude</span> <span class="tp g">GPT</span></td><td><span class="spd spd-now">Now</span></td>
+      </tr>
+      <tr>
+        <td class="fn">Meetings &amp; Comms</td>
+        <td>Teams meeting summaries, action items, follow-up emails via ChatGPT Copilot in Teams and Outlook. No notes taken manually.<div class="tpip"><span class="tp g">ChatGPT</span><span class="tp m">Teams / Outlook</span></div></td>
+        <td><span class="tp g">ChatGPT</span></td><td><span class="spd spd-now">Now</span></td>
+      </tr>
+      <tr>
+        <td class="fn">Legal &amp; Compliance</td>
+        <td>Contracts, MoUs, and regulatory documents loaded into Claude's 500K window. Key obligations and risk flags extracted in minutes.<div class="tpip"><span class="tp c">Claude</span><span class="tp m">OneDrive</span></div></td>
+        <td><span class="tp c">Claude</span></td><td><span class="spd spd-now">Now</span></td>
+      </tr>
+      <tr>
+        <td class="fn">Auditing</td>
+        <td>AI audit tool (in development): auditors upload evidence, AI analyses against dynamic checklist per client scope and standard. Report generated from structured data — not rebuilt from a spreadsheet.<div class="tpip"><span class="tp c">Claude</span><span class="tp m">SharePoint</span></div></td>
+        <td><span class="tp c">Claude</span></td><td><span class="spd spd-s">Q3 2026</span></td>
+      </tr>
+      <tr>
+        <td class="fn">AI Expert Team</td>
+        <td>Claude Code builds internal tools and prototypes with structured task agents running on schedules. Power Automate + Claude API adds AI steps to existing workflows. Azure Foundry for governed deployment.<div class="tpip"><span class="tp c">Claude Code</span><span class="tp m">Azure Foundry</span><span class="tp m">Power Automate</span></div></td>
+        <td><span class="tp c">Claude</span></td><td><span class="spd spd-s">Month 1</span></td>
+      </tr>
+      <tr>
+        <td class="fn">HR &amp; People</td>
+        <td>Custom GPT for HR function — policy Q&amp;A, offer letter drafting, onboarding guides. Available group-wide via GPT Store.<div class="tpip"><span class="tp g">Custom GPT</span><span class="tp m">Teams</span></div></td>
+        <td><span class="tp g">ChatGPT</span></td><td><span class="spd spd-s">Month 1</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 06 COST & ROI -->
+<section id="cost" class="cost-sec">
+  <div class="sec-lbl rv">
+    <span class="sec-idx" style="background:rgba(201,168,76,.12);color:var(--pcu-gold);border-color:rgba(201,168,76,.3);">06</span>
+    <span class="sec-name" style="color:rgba(255,255,255,.3);">Cost Baseline &amp; ROI</span>
+  </div>
+  <h2 class="sh rv">$25/Seat/Month.<br>What It Should Return.</h2>
+  <p class="sl rv">The seat cost is fixed. The return is variable — and measurable. Every role should be able to justify its seat within the first month of active use.</p>
+
+  <div class="cost-hero rv">
+    <div class="cost-hero-cell highlight">
+      <div class="ch-pre">Claude Enterprise — Seat Baseline</div>
+      <div class="ch-num">$25</div>
+      <div class="ch-label">Per seat / per month. Covers access to Claude, Claude Code, and Cowork across web, desktop, and mobile.</div>
+      <div class="ch-note">+ API usage billed at token rates on top of seat fee · Set spend limits per user in admin panel</div>
+    </div>
+    <div class="cost-hero-cell">
+      <div class="ch-pre">ChatGPT Enterprise — Seat Baseline</div>
+      <div class="ch-num">~$30</div>
+      <div class="ch-label">Per seat / per month (flat rate). Unlimited usage within seat. No token overage charges.</div>
+      <div class="ch-note">Simpler cost model — predictable for high-volume conversational users</div>
+    </div>
+  </div>
+
+  <div class="cost-bands rv">
+    <div class="cost-band head">
+      <div class="cb-cell hd">Role</div>
+      <div class="cb-cell hd" style="padding:.8rem 1.25rem;">Est. Time Saved / Month</div>
+      <div class="cb-val hd" style="color:rgba(201,168,76,.6);">ROI vs Seat Cost</div>
+    </div>
+    <div class="cost-band">
+      <div class="cb-cell role-name">Executive / Director</div>
+      <div class="cb-cell"><div class="cb-bar-wrap"><div class="cb-bar" style="width:90%;"></div></div></div>
+      <div class="cb-val">12–20 hrs <span class="cb-roi">High ROI</span></div>
+    </div>
+    <div class="cb-cell" style="padding:.4rem 1.25rem .8rem;grid-column:1/-1;font-size:.73rem;color:rgba(255,255,255,.35);line-height:1.5;">Board reports auto-drafted, contract summaries, briefings from raw data. At $150–200/hr fully-loaded cost, 12 hrs = $1,800–2,400 value vs $25 seat.</div>
+    <div class="cost-band">
+      <div class="cb-cell role-name">Sustainability Consultant</div>
+      <div class="cb-cell"><div class="cb-bar-wrap"><div class="cb-bar" style="width:80%;"></div></div></div>
+      <div class="cb-val">15–25 hrs <span class="cb-roi">High ROI</span></div>
+    </div>
+    <div class="cb-cell" style="padding:.4rem 1.25rem .8rem;grid-column:1/-1;font-size:.73rem;color:rgba(255,255,255,.35);line-height:1.5;">ESG report drafting, regulatory research, client proposal generation. 15 hrs at $80/hr = $1,200 value. Seat pays back in under 30 minutes of report work.</div>
+    <div class="cost-band">
+      <div class="cb-cell role-name">Business Development</div>
+      <div class="cb-cell"><div class="cb-bar-wrap"><div class="cb-bar" style="width:70%;"></div></div></div>
+      <div class="cb-val">10–18 hrs <span class="cb-roi">High ROI</span></div>
+    </div>
+    <div class="cb-cell" style="padding:.4rem 1.25rem .8rem;grid-column:1/-1;font-size:.73rem;color:rgba(255,255,255,.35);line-height:1.5;">Proposals in 30 min vs 2–3 days. Market research summarised instantly. One proposal cycle saved = seat cost covered many times over.</div>
+    <div class="cost-band">
+      <div class="cb-cell role-name">Finance / Operations</div>
+      <div class="cb-cell"><div class="cb-bar-wrap"><div class="cb-bar" style="width:60%;"></div></div></div>
+      <div class="cb-val">8–14 hrs <span class="cb-roi">Medium ROI</span></div>
+    </div>
+    <div class="cb-cell" style="padding:.4rem 1.25rem .8rem;grid-column:1/-1;font-size:.73rem;color:rgba(255,255,255,.35);line-height:1.5;">Cowork automates Excel formatting, report compilation, and commentary. At $60/hr, 8 hrs = $480 value vs $25 seat.</div>
+    <div class="cost-band">
+      <div class="cb-cell role-name">Communications / HR / Admin</div>
+      <div class="cb-cell"><div class="cb-bar-wrap"><div class="cb-bar" style="width:45%;"></div></div></div>
+      <div class="cb-val">5–10 hrs <span class="cb-roi">Clear ROI</span></div>
+    </div>
+    <div class="cb-cell" style="padding:.4rem 1.25rem .8rem;grid-column:1/-1;font-size:.73rem;color:rgba(255,255,255,.35);line-height:1.5;">Content drafts, meeting notes, policy Q&amp;A, HR documents. Even 3 hours saved at $40/hr = $120 value. Seat is justified by week one.</div>
+  </div>
+
+  <div class="cost-note-row rv">
+    <div class="cost-note">
+      <div class="cn-label">Assumption</div>
+      <div class="cn-val">Estimates based on 50% efficiency gain on applicable tasks. Adjust per local salary benchmarks per entity.</div>
+    </div>
+    <div class="cost-note">
+      <div class="cn-label">Token Usage Watch</div>
+      <div class="cn-val">Heavy Claude Code or Cowork use adds API costs above seat fee. Set per-user spend limits in admin panel and monitor via Power BI.</div>
+    </div>
+    <div class="cost-note">
+      <div class="cn-label">ChatGPT Seat Value</div>
+      <div class="cn-val">Flat-rate model suits high-volume conversational users — meeting-heavy roles using Copilot in Teams and Outlook daily.</div>
+    </div>
+    <div class="cost-note">
+      <div class="cn-label">Group Scale</div>
+      <div class="cn-val">At 100 seats: ~$2,500–$3,000/month combined. If avg saving is 8 hrs/seat at $60/hr = $48,000 value. 16× minimum return.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 07 COLLABORATION -->
+<section id="collab">
+  <div class="sec-lbl rv"><span class="sec-idx">07</span><span class="sec-name">Interoffice Collaboration</span></div>
+  <h2 class="sh rv">Removing the Coordination<br>Tax Across Entities.</h2>
+  <p class="sl rv">The biggest hidden cost in a multi-country group is not salaries — it is coordination. Emails, handover delays, duplicated work, and man-hours that vanish into inter-entity admin.</p>
+
+  <div class="collab-grid rv">
+    <div class="collab-card">
+      <div class="cc-icon">✉️</div>
+      <div class="cc-title">Cross-Entity Communication</div>
+      <p class="cc-body">Language, tone, and context gaps between offices cause delays and misalignment. Claude drafts, translates, and adapts communications between entities — with full institutional context loaded from the sending entity's Project.</p>
+      <div class="cc-saves">
+        <div class="cc-save"><span>Email draft cycle</span><span class="cc-save-val">3 days → same day</span></div>
+        <div class="cc-save"><span>Translation / localisation</span><span class="cc-save-val">Outsourced → instant</span></div>
+        <div class="cc-save"><span>Context misalignments</span><span class="cc-save-val">Eliminated with Projects</span></div>
+      </div>
+    </div>
+    <div class="collab-card gold-top">
+      <div class="cc-icon">📋</div>
+      <div class="cc-title">Commission &amp; Task Handover</div>
+      <p class="cc-body">When work is commissioned across entities, the brief itself is the most common source of delay and rework. Claude standardises the briefing format, auto-generates scopes of work, and tracks obligations in a shared Project accessible to both sides.</p>
+      <div class="cc-saves">
+        <div class="cc-save"><span>Brief writing time</span><span class="cc-save-val">4–6 hrs → 30 min</span></div>
+        <div class="cc-save"><span>Rework from unclear briefs</span><span class="cc-save-val">Reduced by ~70%</span></div>
+        <div class="cc-save"><span>Commission disputes</span><span class="cc-save-val">Days → same session</span></div>
+      </div>
+    </div>
+    <div class="collab-card green-top">
+      <div class="cc-icon">⏱️</div>
+      <div class="cc-title">Man-Hours Attribution</div>
+      <p class="cc-body">Tracking billable and internal man-hours across entities is manual and error-prone. Claude Code can build a lightweight timesheet parser on top of existing Excel or SharePoint data — automatically attributing hours to projects and cost centres.</p>
+      <div class="cc-saves">
+        <div class="cc-save"><span>Monthly timesheet reconciliation</span><span class="cc-save-val">2 days → 2 hrs</span></div>
+        <div class="cc-save"><span>Cross-entity billing accuracy</span><span class="cc-save-val">Manual → automated</span></div>
+        <div class="cc-save"><span>Attribution errors</span><span class="cc-save-val">Near zero</span></div>
+      </div>
+    </div>
+    <div class="collab-card">
+      <div class="cc-icon">🗂️</div>
+      <div class="cc-title">Shared Institutional Memory</div>
+      <p class="cc-body">When staff move between entities or leave, institutional knowledge walks out with them. Claude Projects act as a persistent, queryable knowledge base per entity. New staff onboard by asking the Project — not interrupting colleagues in other time zones.</p>
+      <div class="cc-saves">
+        <div class="cc-save"><span>New hire ramp time</span><span class="cc-save-val">4–6 weeks → 1 week</span></div>
+        <div class="cc-save"><span>Knowledge-transfer meetings</span><span class="cc-save-val">Reduced 60%</span></div>
+        <div class="cc-save"><span>Repeated questions to HQ</span><span class="cc-save-val">Self-served via Project</span></div>
+      </div>
+    </div>
+    <div class="collab-card gold-top">
+      <div class="cc-icon">📊</div>
+      <div class="cc-title">Group Reporting</div>
+      <p class="cc-body">Consolidating performance reports from multiple entities requires a multi-day cycle. Cowork reads each entity's Excel or SharePoint data, standardises the format, and assembles the group view — without anyone waiting for files to arrive across time zones.</p>
+      <div class="cc-saves">
+        <div class="cc-save"><span>Monthly report compilation</span><span class="cc-save-val">3–5 days → 4 hrs</span></div>
+        <div class="cc-save"><span>Format standardisation</span><span class="cc-save-val">Eliminated</span></div>
+        <div class="cc-save"><span>Coordinator man-hours</span><span class="cc-save-val">Redeployed to analysis</span></div>
+      </div>
+    </div>
+    <div class="collab-card green-top">
+      <div class="cc-icon">🤝</div>
+      <div class="cc-title">Client Handoffs Between Entities</div>
+      <p class="cc-body">When a client relationship transfers between PCU entities, context loss is the biggest risk. A shared Claude Project per client account means any entity picking up the relationship has full history, agreed deliverables, and open items in one queryable place.</p>
+      <div class="cc-saves">
+        <div class="cc-save"><span>Client context transfer</span><span class="cc-save-val">1–2 weeks → 1 day</span></div>
+        <div class="cc-save"><span>Relationship continuity risk</span><span class="cc-save-val">Significantly reduced</span></div>
+        <div class="cc-save"><span>Handover documentation</span><span class="cc-save-val">Auto-generated</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-lbl rv" style="margin-bottom:.75rem;margin-top:2.5rem;"><span class="sec-idx">—</span><span class="sec-name">Before vs After: Specific Scenarios</span></div>
+  <div class="collab-scenario rv">
+    <div class="cs-head">
+      <div class="cs-hcell">Scenario</div><div class="cs-hcell">Before AI</div><div class="cs-hcell">After AI</div><div class="cs-hcell">Man-Hours Saved</div>
+    </div>
+    <div class="cs-row"><div class="cs-cell scenario-name">Cross-entity project brief <span class="tag-small ts-c">Claude</span></div><div class="cs-cell before">4–6 hrs writing + 2 revision rounds</div><div class="cs-cell after">30 min with Claude + 1 review</div><div class="cs-cell saving">~5 hrs / commission</div></div>
+    <div class="cs-row"><div class="cs-cell scenario-name">ESG report first draft <span class="tag-small ts-c">Claude</span></div><div class="cs-cell before">3–5 days, 1–2 consultants</div><div class="cs-cell after">1 session, 1 consultant</div><div class="cs-cell saving">20–30 hrs / report</div></div>
+    <div class="cs-row"><div class="cs-cell scenario-name">Monthly group reporting <span class="tag-small ts-c">Cowork</span></div><div class="cs-cell before">3 days, coordinator + entity leads</div><div class="cs-cell after">4 hrs automated + review</div><div class="cs-cell saving">18–20 hrs / month</div></div>
+    <div class="cs-row"><div class="cs-cell scenario-name">Meeting notes &amp; action items <span class="tag-small ts-g">ChatGPT</span></div><div class="cs-cell before">30–60 min post-meeting write-up</div><div class="cs-cell after">Auto-generated during meeting</div><div class="cs-cell saving">0.5–1 hr / meeting</div></div>
+    <div class="cs-row"><div class="cs-cell scenario-name">Client proposal (new business) <span class="tag-small ts-c">Claude</span></div><div class="cs-cell before">2–3 days, BD + technical input</div><div class="cs-cell after">Under 1 hour with Project context</div><div class="cs-cell saving">12–20 hrs / proposal</div></div>
+    <div class="cs-row"><div class="cs-cell scenario-name">New staff onboarding <span class="tag-small ts-c">Claude</span></div><div class="cs-cell before">4–6 weeks, multiple mentors</div><div class="cs-cell after">1 week, Project-assisted</div><div class="cs-cell saving">40–80 hrs / hire</div></div>
+    <div class="cs-row"><div class="cs-cell scenario-name">Contract &amp; MoU review <span class="tag-small ts-c">Claude</span></div><div class="cs-cell before">1–2 days, legal + management</div><div class="cs-cell after">30 min summary + flagged risks</div><div class="cs-cell saving">8–12 hrs / document</div></div>
+    <div class="cs-row"><div class="cs-cell scenario-name">Policy &amp; SOP Q&amp;A <span class="tag-small ts-g">Custom GPT</span></div><div class="cs-cell before">Email chain, 1–3 day response</div><div class="cs-cell after">Instant, self-served via Custom GPT</div><div class="cs-cell saving">1–2 hrs / query</div></div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 08 PIPELINE -->
+<section id="process" class="flow-sec">
+  <div class="sec-lbl rv"><span class="sec-idx">08</span><span class="sec-name">AI Expert Team — Innovation Pipeline</span></div>
+  <h2 class="sh rv">How Ideas Become<br>Group-Wide Tools.</h2>
+  <p class="sl rv">Any team in any entity submits. The AI Expert Team runs it through a five-stage pipeline and ships the result — internally or as a client service.</p>
+
+  <div class="flow-track rv">
+    <div class="flow-step">
+      <div class="flow-node"><span class="fn-n">1</span></div>
+      <div class="flow-title">Submit</div>
+      <p class="flow-desc">Any entity. Any idea. AI Expert Team reviews within 48h. Use the project register on ShareNet.</p>
+      <span class="flow-tool">Teams Form · ShareNet</span>
+    </div>
+    <div class="flow-step">
+      <div class="flow-node"><span class="fn-n">2</span></div>
+      <div class="flow-title">Research</div>
+      <p class="flow-desc">Claude 500K context + web search + SharePoint. Full landscape analysis — regulatory, competitive, internal — in days.</p>
+      <span class="flow-tool">Claude Enterprise</span>
+    </div>
+    <div class="flow-step">
+      <div class="flow-node"><span class="fn-n">3</span></div>
+      <div class="flow-title">Build</div>
+      <p class="flow-desc">Claude Code or Custom GPT builds the MVP. Structured task agents run on schedule. Ship in days, not quarters.</p>
+      <span class="flow-tool">Claude Code / GPT</span>
+    </div>
+    <div class="flow-step">
+      <div class="flow-node"><span class="fn-n">4</span></div>
+      <div class="flow-title">Pilot</div>
+      <p class="flow-desc">One entity tests first. Usage tracked via Compliance API → Power BI. Human review at every output stage.</p>
+      <span class="flow-tool">Power BI + API</span>
+    </div>
+    <div class="flow-step">
+      <div class="flow-node"><span class="fn-n">5</span></div>
+      <div class="flow-title">Roll Out</div>
+      <p class="flow-desc">Proven tools deploy group-wide or become client-facing services. AI Expert Team owns the handover to professional development.</p>
+      <span class="flow-tool">Group-Wide</span>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 09 INSIGHTS FROM AI EXPERT TEAM -->
+<section id="insights" class="insights-sec">
+  <div class="sec-lbl rv"><span class="sec-idx">09</span><span class="sec-name">Live from the AI Expert Team</span></div>
+  <h2 class="sh rv">What the Team Is Actually<br>Building and Deciding.</h2>
+  <p class="sl rv">Real topics, real prototypes, and real governance decisions from PCU Global AI Expert Team meetings — January to April 2026.</p>
+
+  <div class="insights-grid rv">
+    <div class="insight-card">
+      <div class="ic-date">Jan 2026 · AI Expert Team</div>
+      <div class="ic-topic">Claude Code Agent — 1 Developer Doing the Work of 4–5</div>
+      <p class="ic-body">Phu (Vietnam) demonstrated an agent-driven coding workflow: structured tasks assigned to Claude Code, which generates, validates, and commits code to a review branch for human sign-off. Ships what previously required a full team. Estimated 85% success rate when tasks are small and well-specified.</p>
+      <div class="ic-tags"><span class="ic-tag ict-build">Claude Code</span><span class="ic-tag ict-gov">Human Review Required</span></div>
+    </div>
+    <div class="insight-card">
+      <div class="ic-date">Jan 2026 · AI Expert Team</div>
+      <div class="ic-topic">AI Audit Tool — From Evidence Upload to Compliance Report</div>
+      <p class="ic-body">Prototype in development: auditors upload evidence (documents, photos, audio), AI analyses against a dynamic checklist that adapts per client scope and certification standard. Compliance status is suggested — the auditor decides. Audit report generation: 2 weeks → 1–2 hours.</p>
+      <div class="ic-tags"><span class="ic-tag ict-build">In Development</span><span class="ic-tag ict-collab">Audit Function</span></div>
+    </div>
+    <div class="insight-card">
+      <div class="ic-date">Jan 2026 · AI Expert Team</div>
+      <div class="ic-topic">Governance: Who Is Liable When AI Gets It Wrong?</div>
+      <p class="ic-body">If an AI tool gives wrong information and a business decision is made on it, who is responsible? Agreed: the person who used it without reviewing it. Graeme (InfoSec) is working with HR to update the Code of Conduct — personal accountability for AI output is now a formal requirement in progress.</p>
+      <div class="ic-tags"><span class="ic-tag ict-risk">Risk</span><span class="ic-tag ict-gov">Policy Update</span></div>
+    </div>
+    <div class="insight-card">
+      <div class="ic-date">Feb 2026 · AI Expert Team</div>
+      <div class="ic-topic">Duplicate AI Projects — Multiple Entities Building the Same Thing</div>
+      <p class="ic-body">Multiple entities independently built near-identical email-reading agents using separate third parties, with no awareness of each other. The same pattern is repeating with chatbots, logo approval tools, and OCR digitisation. The AI Project Register and Innovation Showcase exist to prevent this — they need to be used.</p>
+      <div class="ic-tags"><span class="ic-tag ict-risk">Efficiency Risk</span><span class="ic-tag ict-hub">Project Register</span></div>
+    </div>
+    <div class="insight-card">
+      <div class="ic-date">Feb 2026 · AI Expert Team</div>
+      <div class="ic-topic">AI Hub on ShareNet — In Progress</div>
+      <p class="ic-body">An internal AI Hub is being built: Beginners Hub (getting started, tool comparisons, how to apply for enterprise licenses) and Explorers Hub (advanced prompting, prompt library, success stories). Phu proposed surfacing hub content via MCP/chatbot integration so users can query policy directly from Claude or ChatGPT without navigating to ShareNet.</p>
+      <div class="ic-tags"><span class="ic-tag ict-hub">ShareNet</span><span class="ic-tag ict-collab">In Progress</span></div>
+    </div>
+    <div class="insight-card">
+      <div class="ic-date">Apr 2026 · AI Expert Team</div>
+      <div class="ic-topic">Claude Browser Agent — Powerful, but Security Guardrails Required</div>
+      <p class="ic-body">Antonella (QA) demonstrated Claude's browser plugin executing UI tasks autonomously — creating 32 test users from an Excel file, validating dropdowns, generating documentation. Security concern raised: Claude acts as the user, but logs show the user's name. Mitigation required: containerised execution, mandatory plan confirmation before Claude acts, restricted Office 365 access until governance is confirmed.</p>
+      <div class="ic-tags"><span class="ic-tag ict-risk">Security Concern</span><span class="ic-tag ict-build">Claude Cowork</span><span class="ic-tag ict-gov">Guardrails Required</span></div>
+    </div>
+  </div>
+
+  <div class="sec-lbl rv" style="margin-bottom:.75rem;"><span class="sec-idx">—</span><span class="sec-name">Open Action Items — AI Expert Team</span></div>
+  <div class="rv" style="overflow-x:auto;">
+  <table class="action-table">
+    <thead>
+      <tr><th>Action</th><th>Owner</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Designate 3 moderators for AI Hub and agree initial content for launch</td><td class="owner">Michal Nowak</td><td class="status stat-prog">In Progress</td></tr>
+      <tr><td>Coordinate AI Hub design and ShareNet placement with Steven Smith</td><td class="owner">Michal Nowak</td><td class="status stat-prog">In Progress</td></tr>
+      <tr><td>Update Code of Conduct: personal accountability for AI output quality</td><td class="owner">Graeme Mutch + HR</td><td class="status stat-open">Open</td></tr>
+      <tr><td>Investigate governance and guardrails for Claude Cowork (containers, logging, plan confirmation)</td><td class="owner">Graeme Mutch</td><td class="status stat-prog">In Progress</td></tr>
+      <tr><td>Innovation showcase — surface existing prototypes to reduce duplicate builds across entities</td><td class="owner">Phu Hoang Bao</td><td class="status stat-open">Open</td></tr>
+      <tr><td>Contact Academy (Rodin &amp; Ines) — develop introductory AI curriculum for group-wide rollout</td><td class="owner">Graeme Mutch</td><td class="status stat-open">Open</td></tr>
+      <tr><td>Identify overlapping AI efforts (chatbots, logo approval, OCR) and propose consolidation candidates</td><td class="owner">Antonella Mattia</td><td class="status stat-open">Open</td></tr>
+      <tr><td>Audit tool — complete dynamic checklist builder and evidence-to-report pipeline</td><td class="owner">Phu Hoang Bao</td><td class="status stat-prog">In Progress</td></tr>
+      <tr><td>Surface hub content via MCP/chatbot — query AI policy directly from Claude or ChatGPT</td><td class="owner">Phu Hoang Bao</td><td class="status stat-open">Open</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 10 HURDLES -->
+<section id="hurdles" class="alt-sec">
+  <div class="sec-lbl rv"><span class="sec-idx">10</span><span class="sec-name">Removing Hurdles</span></div>
+  <h2 class="sh rv">Every Blocker Has<br>a Specific Fix.</h2>
+  <p class="sl rv">Most blockers are setup gaps, not limitations. Each one below has been observed in the group and has a direct resolution.</p>
+
+  <div class="hurdle-list rv">
+    <div class="hurdle-row"><div class="hc hd">Hurdle</div><div class="hc hd">Fix With</div><div class="hc hd">How</div></div>
+    <div class="hurdle-row">
+      <div class="hc hc-h">Staff don't know what to use AI for</div>
+      <div class="hc"><span class="ftag fc">Claude</span> <span class="ftag fg">GPT</span></div>
+      <div class="hc">AI Expert Team publishes a Prompt Library — tested prompts by function. Shared via a Claude Project and a Custom GPT. No blank-page problem.</div>
+    </div>
+    <div class="hurdle-row">
+      <div class="hc hc-h">Claude doesn't know PCU's documents or context</div>
+      <div class="hc"><span class="ftag fc">Claude Projects</span></div>
+      <div class="hc">Create one Project per entity. Upload SOPs, templates, past proposals, brand guidelines. Every user works with full institutional context from session one.</div>
+    </div>
+    <div class="hurdle-row">
+      <div class="hc hc-h">Too many tools, unclear which to open</div>
+      <div class="hc"><span class="ftag fx">Policy</span></div>
+      <div class="hc">One decision rule: long/deep/technical → Claude. Fast/visual/Microsoft-embedded → ChatGPT. Post it in every entity Teams channel.</div>
+    </div>
+    <div class="hurdle-row">
+      <div class="hc hc-h">No visibility on what teams are actually using</div>
+      <div class="hc"><span class="ftag fm">Power BI</span></div>
+      <div class="hc">Claude Compliance API + Analytics API connect to Power BI. Group-level adoption by entity and function becomes a live dashboard.</div>
+    </div>
+    <div class="hurdle-row">
+      <div class="hc hc-h">Costs feel unpredictable on Claude Enterprise</div>
+      <div class="hc"><span class="ftag fc">Admin Panel</span></div>
+      <div class="hc">Set per-user spend limits in the Enterprise admin panel. Five-minute admin task. Usage visible in Azure Cost Management via Azure Foundry.</div>
+    </div>
+    <div class="hurdle-row">
+      <div class="hc hc-h">AI doesn't fit into how we work (Teams, SharePoint)</div>
+      <div class="hc"><span class="ftag fm">M365 Connector</span></div>
+      <div class="hc">Activate the Microsoft 365 connector on Claude Enterprise from the admin panel. Claude reads SharePoint and OneDrive directly. ChatGPT Copilot is already in Teams and Outlook.</div>
+    </div>
+    <div class="hurdle-row">
+      <div class="hc hc-h">Ideas from entities don't reach the AI Expert Team</div>
+      <div class="hc"><span class="ftag fx">Process</span></div>
+      <div class="hc">Designate one AI Champion per entity — any function, not IT. They collect team ideas and route to the AI Expert Team. Add all projects to the ShareNet register.</div>
+    </div>
+    <div class="hurdle-row">
+      <div class="hc hc-h">Security concern: where does PCU data go?</div>
+      <div class="hc"><span class="ftag fc">Claude</span> <span class="ftag fg">GPT</span></div>
+      <div class="hc">Both Enterprise accounts guarantee no training on PCU data. Claude on Azure Foundry stays within Azure's boundary, governed by Microsoft Entra ID — the same security layer as all M365 data.</div>
+    </div>
+    <div class="hurdle-row">
+      <div class="hc hc-h">Staff using personal or free AI accounts (Gemini, personal Claude Pro)</div>
+      <div class="hc"><span class="ftag fx">Policy</span> <span class="ftag fm">SSO</span></div>
+      <div class="hc">Enable domain capture via Entra ID SSO — group-approved accounts auto-provisioned to every entity email. Communicate clearly that personal accounts carry data risk and are not covered by policy.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 11 GOVERNANCE -->
+<section>
+  <div class="sec-lbl rv"><span class="sec-idx">11</span><span class="sec-name">Governance — Built-In Controls</span></div>
+  <h2 class="sh rv">Controls That Come<br>With the Accounts.</h2>
+  <p class="sl rv">No custom infrastructure needed. These are built-in features — they just need to be activated and owned.</p>
+
+  <div class="gov-grid rv">
+    <div class="gov-card">
+      <div class="gov-icon">🔐</div>
+      <div class="gov-title">Identity — SSO + Entra ID</div>
+      <p class="gov-body">Connect to Microsoft Entra ID once — domain capture automatically provisions every PCU entity email. Users log in with existing Microsoft credentials. No separate password management.</p>
+      <div class="gov-note">Owner: IT · Time: 1 day</div>
+    </div>
+    <div class="gov-card">
+      <div class="gov-icon">💰</div>
+      <div class="gov-title">Spend — Admin Limits</div>
+      <p class="gov-body">Claude Enterprise admin panel lets you set spend limits at organisation or per-user level. ChatGPT Enterprise is flat-rate per seat. Azure Cost Management tracks Claude spend alongside all cloud costs when running via Azure Foundry.</p>
+      <div class="gov-note">Owner: Finance + IT · Time: 2 hours</div>
+    </div>
+    <div class="gov-card">
+      <div class="gov-icon">📊</div>
+      <div class="gov-title">Visibility — Compliance API → Power BI</div>
+      <p class="gov-body">Claude's Compliance and Analytics APIs give programmatic access to usage data and adoption metrics. Pipe into the Power BI instance PCU already uses. Group-level AI utilisation becomes a live report.</p>
+      <div class="gov-note">Owner: AI Expert Team · Time: 1–2 weeks</div>
+    </div>
+    <div class="gov-card">
+      <div class="gov-icon">📁</div>
+      <div class="gov-title">Knowledge — Projects + Custom GPTs</div>
+      <p class="gov-body">One Claude Project or Custom GPT per entity, populated with core documents. Maintained by the AI Champion in each entity. Updated quarterly by the AI Expert Team to keep context current.</p>
+      <div class="gov-note">Owner: AI Champions · Time: 1 week</div>
+    </div>
+    <div class="gov-card">
+      <div class="gov-icon">📋</div>
+      <div class="gov-title">Policy — One Page, Practical</div>
+      <p class="gov-body">Three questions answered: which tool for which task, what data can go in, who to contact if unsure. Based on the rPCU Responsible AI Usage Policy v0.1. Published in Teams. Maintained by the AI Expert Team every 6 months.</p>
+      <div class="gov-note">Owner: AI Expert Team + HR · Time: 3 days</div>
+    </div>
+    <div class="gov-card">
+      <div class="gov-icon">🔒</div>
+      <div class="gov-title">Data — No Training on PCU Content</div>
+      <p class="gov-body">Both Enterprise accounts contractually guarantee PCU's data is not used to train models. Claude on Azure Foundry stays within Azure's boundary — the same as SharePoint and OneDrive. Cowork access to Office 365 is currently restricted pending further governance review.</p>
+      <div class="gov-note">Contractual guarantee · Both platforms</div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 12 90-DAY PLAN -->
+<section id="plan" class="alt-sec">
+  <div class="sec-lbl rv"><span class="sec-idx">12</span><span class="sec-name">90-Day Activation</span></div>
+  <h2 class="sh rv">What Happens<br>in 90 Days.</h2>
+  <p class="sl rv">Sequenced for speed. Each phase has a clear output, not just a to-do list.</p>
+
+  <div class="days-grid rv">
+    <div class="day-col">
+      <div class="day-num">30</div>
+      <div class="day-badge db1">Days 1–30</div>
+      <div class="day-title">Switch Everything On</div>
+      <div class="day-focus">IT + AI Expert Team</div>
+      <ul class="day-items">
+        <li>SSO connected to Microsoft Entra ID for both platforms</li>
+        <li>M365 connector activated on Claude Enterprise</li>
+        <li>One Project per entity — core documents uploaded</li>
+        <li>Spend limits set in Claude admin panel</li>
+        <li>AI Champions named in each entity</li>
+        <li>Group AI usage policy published in Teams</li>
+        <li>AI Project Register link surfaced and communicated group-wide</li>
+        <li><strong>Output:</strong> Every seat is useful from day one</li>
+      </ul>
+    </div>
+    <div class="day-col">
+      <div class="day-num">60</div>
+      <div class="day-badge db2">Days 31–60</div>
+      <div class="day-title">Ship the First Results</div>
+      <div class="day-focus">AI Expert Team + Department Leads</div>
+      <ul class="day-items">
+        <li>Prompt Library v1 published — tested prompts by function</li>
+        <li>First Custom GPT live for one function (HR or Sustainability)</li>
+        <li>First use case in Pilot — ESG drafting or proposal generation</li>
+        <li>Claude Code activated for AI Expert Team builds</li>
+        <li>Power BI adoption dashboard connected via Compliance API</li>
+        <li>AI Champions running weekly 30-min show-and-tells</li>
+        <li>Innovation Showcase launched — all active prototypes listed</li>
+        <li><strong>Output:</strong> First documented time/cost saving shared with leadership</li>
+      </ul>
+    </div>
+    <div class="day-col">
+      <div class="day-num">90</div>
+      <div class="day-badge db3">Days 61–90</div>
+      <div class="day-title">Build the Advantage</div>
+      <div class="day-focus">AI Expert Team + Group Leadership</div>
+      <ul class="day-items">
+        <li>First internal tool shipped via Claude Code — deployed group-wide</li>
+        <li>AI-assisted ESG reporting validated as a client-facing service</li>
+        <li>Power Automate + Claude API integration in at least one live workflow</li>
+        <li>ROI snapshot produced: time saved, output improved, cost attributed</li>
+        <li>AI Hub on ShareNet live with Beginners and Explorers content</li>
+        <li>Introductory AI curriculum agreed with the Academy</li>
+        <li><strong>Output:</strong> PCU operates as an AI-native organisation</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-doc-title">PCU AI PLAYBOOK — Internal Operational Guide</div>
+      <div class="footer-doc-meta">For Internal Use Only &middot; Not for External Distribution &middot; Version 1.0 &middot; 2025</div>
+    </div>
+    <div class="footer-author">
+      <div class="footer-by">Prepared by</div>
+      <div class="footer-name">Ahmad Qaiyum</div>
+      <div class="footer-role">PCU Global AI Expert Team<br>Peterson Solutions Malaysia</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e,i) => {
+    if(e.isIntersecting) setTimeout(()=>e.target.classList.add('on'), i*50);
+  });
+},{threshold:.07});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
